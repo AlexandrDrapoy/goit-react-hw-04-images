@@ -1,11 +1,17 @@
 import { Component } from 'react';
-
+import {
+  SearchbarWrap,
+  SearchForm,
+  SearchFormButton,
+  SearchFormButtonLabel,
+  SearchFormInput,
+} from './Searchbar.styled';
+import PropTypes from 'prop-types';
 export class Searchbar extends Component {
   state = {
     searchValue: '',
   };
   handleChange = e => {
-    console.log(e);
     this.setState({
       searchValue: e.currentTarget.value,
     });
@@ -17,14 +23,13 @@ export class Searchbar extends Component {
   };
   render() {
     return (
-      <header className="Searchbar">
-        <form className="SearchForm" onSubmit={this.handleSubmit}>
-          <button type="submit" className="SearchForm-button">
-            <span className="SearchForm-button-label">Search</span>
-          </button>
+      <SearchbarWrap>
+        <SearchForm onSubmit={this.handleSubmit}>
+          <SearchFormButton type="submit">
+            <SearchFormButtonLabel>Search</SearchFormButtonLabel>
+          </SearchFormButton>
 
-          <input
-            className="SearchForm-input"
+          <SearchFormInput
             name="serchFormField"
             type="text"
             autoComplete="off"
@@ -33,8 +38,13 @@ export class Searchbar extends Component {
             onChange={this.handleChange}
             placeholder="Search images and photos"
           />
-        </form>
-      </header>
+        </SearchForm>
+      </SearchbarWrap>
     );
   }
 }
+
+Searchbar.prototype = {
+  onSubmit: PropTypes.func,
+  onChange: PropTypes.func,
+};

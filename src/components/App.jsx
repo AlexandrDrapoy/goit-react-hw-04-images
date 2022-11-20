@@ -1,9 +1,10 @@
 import { Component } from 'react';
 
 import { ImageGallery } from './ImageGallery/ImageGallery';
-
+import Notiflix from 'notiflix';
 import { Searchbar } from './Searchbar/Searchbar';
-
+import { AppBlock } from './App.styled';
+import PropTypes from 'prop-types';
 export class App extends Component {
   state = {
     showModal: false,
@@ -11,21 +12,26 @@ export class App extends Component {
   };
 
   handleSubmitSearchBar = searchValue => {
+    if (searchValue === '') {
+      Notiflix.Notify.warning(`Ви не ввели жодного запиту`);
+    }
+
     this.setState({ searchValue: searchValue });
   };
-
-  async componentDidMount() {}
-
-  componentDidUpdate(prevProps, prevState) {}
 
   render() {
     const { searchValue } = this.state;
 
     return (
-      <div className="App">
+      <AppBlock>
         <Searchbar onSubmit={this.handleSubmitSearchBar} />
         {searchValue.length > 0 && <ImageGallery searchValue={searchValue} />}
-      </div>
+      </AppBlock>
     );
   }
 }
+
+App.prototype = {
+  onSubmit: PropTypes.string.isRequired,
+  searchValue: PropTypes.string.isRequired,
+};

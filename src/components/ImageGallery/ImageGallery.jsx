@@ -1,21 +1,27 @@
 import { ImageGalleryItem } from 'components/ImageGalleryItem/ImageGalleryItem';
 import { Component } from 'react';
 import axios from 'axios';
-
+import PropTypes from 'prop-types';
 import { Button } from 'components/Button/Button';
 import { Modal } from 'components/Modal/Modal';
 
+import Notiflix from 'notiflix';
+import {
+  ImageGalleryList,
+  SelectedModalWindowImage,
+} from './ImageGallery.styled';
+import { Loader } from 'components/Loader/Loader';
 axios.defaults.baseURL = 'https://pixabay.com/api';
-axios.defaults.headers.common['key'] = process.env.REACT_APP_API_KEY;
+
 export class ImageGallery extends Component {
   state = {
     requestData: [],
     page: null,
-    loading: false,
+    loading: true,
     showModal: false,
   };
+
   toggleModal = () => {
-    console.log(this.state);
     this.setState(({ showModal }) => ({
       showModal: !showModal,
     }));
@@ -26,9 +32,8 @@ export class ImageGallery extends Component {
   };
 
   loadMore = () => {
-    console.log(this.state.page);
+    this.setState({ loading: true });
     this.setState(prevState => ({ page: prevState.page + 1 }));
-    console.log(this.state.page);
   };
 
   normalizeResponse = response => {
@@ -40,7 +45,6 @@ export class ImageGallery extends Component {
       })
     );
 
-    console.log(nornalizeData);
     return nornalizeData;
   };
   componentDidMount() {
@@ -50,11 +54,11 @@ export class ImageGallery extends Component {
   async componentDidUpdate(prevProps, prevState) {
     const prevSearchValue = prevProps.searchValue;
     const nextSearchValue = this.props.searchValue;
-    if (prevSearchValue !== nextSearchValue) {
+    if (prevSearchValue !== nextSearchValue || nextSearchValue === '') {
       this.setState({
         requestData: [],
         page: 1,
-        loading: false,
+        loading: true,
         showModal: false,
       });
     }
@@ -71,6 +75,11 @@ export class ImageGallery extends Component {
             per_page: 12,
           },
         });
+        if (!response.data.totalHits) {
+          Notiflix.Notify.warning(`Нічого не знайдено, спробуйте ще`);
+          return;
+        }
+        this.setState({ totalHits: response.data.totalHits });
         const data = this.normalizeResponse(response);
         this.setState({ requestData: [...this.state.requestData, ...data] });
       } catch (error) {
@@ -83,10 +92,10 @@ export class ImageGallery extends Component {
   }
 
   render() {
-    const { showModal } = this.state;
+    const { showModal, totalHits, page, loading } = this.state;
     return (
       <>
-        <ul className="ImageGallery">
+        <ImageGalleryList>
           {this.state.requestData.map(el => (
             <ImageGalleryItem
               key={el.id}
@@ -94,17 +103,33 @@ export class ImageGallery extends Component {
               dataGalleryItem={el}
             />
           ))}
-        </ul>
-        <Button type="button" onClick={this.loadMore}>
-          Load More
-        </Button>
+          {loading && <Loader />}
+        </ImageGalleryList>
+        {totalHits > 12 * page &&
+          this.state.requestData.length > 0 &&
+          !loading && <Button onClick={this.loadMore}>Load More</Button>}
+
         {showModal && (
           <Modal onClose={this.toggleModal}>
-            <img src={this.state.largeModalImgURL} alt="" />
-            <Button onClick={() => this.toggleModal}>Close</Button>
+            <SelectedModalWindowImage
+              src={this.state.largeModalImgURL}
+              alt=""
+            />
+            <Button onClick={this.toggleModal}>Close</Button>
           </Modal>
         )}
       </>
     );
   }
 }
+
+ImageGallery.prototype = {
+  key: PropTypes.any.isRequired,
+  onClick: PropTypes.func.isRequired,
+  dataGalleryItem: PropTypes.shape({
+    id: PropTypes.any.isRequired,
+    webURL: PropTypes.string.isRequired,
+    largeURL: PropTypes.string.isRequired,
+  }),
+  onClose: PropTypes.func.isRequired,
+};

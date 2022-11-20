@@ -1,6 +1,14 @@
 import React from 'react';
+import { ButtonOnClick } from './Button.styled';
+import PropTypes from 'prop-types';
+
 export const Button = props => (
-  <button type="button" onClick={props.onClick} className="Button">
+  <ButtonOnClick type="button" onClick={props.onClick}>
     {props.children}
-  </button>
+  </ButtonOnClick>
 );
+
+Button.prototype = {
+  onClick: PropTypes.func.isRequired,
+  children: PropTypes.any.isRequired,
+};
