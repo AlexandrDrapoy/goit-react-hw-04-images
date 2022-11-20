@@ -44,7 +44,7 @@ export class Searchbar extends Component {
   }
 }
 
-Searchbar.prototype = {
+Searchbar.propTypes = {
   onSubmit: PropTypes.func,
   onChange: PropTypes.func,
 };

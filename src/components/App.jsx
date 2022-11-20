@@ -31,7 +31,7 @@ export class App extends Component {
   }
 }
 
-App.prototype = {
+App.propTypes = {
   onSubmit: PropTypes.string.isRequired,
   searchValue: PropTypes.string.isRequired,
 };

@@ -33,7 +33,7 @@ export class Modal extends Component {
   }
 }
 
-Modal.prototype = {
+Modal.propTypes = {
   onClick: PropTypes.func.isRequired,
   children: PropTypes.any.isRequired,
 };

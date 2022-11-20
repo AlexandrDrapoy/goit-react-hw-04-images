@@ -123,7 +123,7 @@ export class ImageGallery extends Component {
   }
 }
 
-ImageGallery.prototype = {
+ImageGallery.propTypes = {
   key: PropTypes.any.isRequired,
   onClick: PropTypes.func.isRequired,
   dataGalleryItem: PropTypes.shape({
