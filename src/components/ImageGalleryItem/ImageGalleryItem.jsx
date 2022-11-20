@@ -20,6 +20,6 @@ export class ImageGalleryItem extends Component {
   }
 }
 
-ImageGalleryItem.prototype = {
+ImageGalleryItem.propTypes = {
   onClick: PropTypes.string.isRequired,
 };
