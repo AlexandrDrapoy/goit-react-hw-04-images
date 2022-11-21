@@ -18,14 +18,14 @@ export class Modal extends Component {
     }
   };
 
-  handeBackdropClick = e => {
+  handleBackdropClick = e => {
     if (e.target === e.currentTarget) {
       this.props.onClose();
     }
   };
   render() {
     return createPortal(
-      <Overlay onClick={this.handeBackdropClick}>
+      <Overlay onClick={this.handleBackdropClick}>
         <ModalWindow>{this.props.children}</ModalWindow>
       </Overlay>,
       modalRoot
@@ -34,6 +34,5 @@ export class Modal extends Component {
 }
 
 Modal.propTypes = {
-  onClick: PropTypes.func.isRequired,
   children: PropTypes.any.isRequired,
 };
