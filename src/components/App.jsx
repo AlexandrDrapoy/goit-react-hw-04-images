@@ -1,7 +1,5 @@
-import { Component } from 'react';
 import axios from 'axios';
 import Notiflix from 'notiflix';
-// import PropTypes from 'prop-types';
 
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Searchbar } from './Searchbar/Searchbar';
@@ -10,33 +8,35 @@ import { Loader } from './Loader/Loader';
 import { Modal } from './Modal/Modal';
 import { SelectedModalWindowImage } from './ImageGallery/ImageGallery.styled';
 import { Button } from './Button/Button';
+import { useState } from 'react';
+import { useEffect } from 'react';
 
 axios.defaults.baseURL = 'https://pixabay.com/api';
-export class App extends Component {
-  state = {
-    showModal: false,
-    searchValue: '',
-    requestData: [],
-    page: null,
-    loading: false,
+
+export const App = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+  const [requestData, setRequestData] = useState([]);
+  const [page, setPage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [largeUrl, setLargeUrl] = useState('');
+  const [totalHits, setTotalHits] = useState(0);
+
+  const toggleModal = () => {
+    setShowModal(state => !state);
   };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
-  };
-  onClickImg = largeURL => {
-    this.toggleModal();
-    this.setState({ largeModalImgURL: largeURL });
+  const onClickImg = largeURL => {
+    toggleModal();
+    setLargeUrl(largeURL);
   };
 
-  loadMore = () => {
-    this.setState({ loading: true });
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const loadMore = () => {
+    setLoading(true);
+    setPage(state => state + 1);
   };
 
-  normalizeResponse = response => {
+  const normalizeResponse = response => {
     const nornalizeData = response.data.hits.map(
       ({ webformatURL, id, largeImageURL }) => ({
         id: id,
@@ -48,90 +48,68 @@ export class App extends Component {
     return nornalizeData;
   };
 
-  async componentDidUpdate(prevProps, prevState) {
-    const prevSearchValue = prevState.searchValue;
-    const nextSearchValue = this.state.searchValue;
-    if (
-      prevSearchValue !== nextSearchValue ||
-      prevState.page !== this.state.page
-    ) {
-      try {
-        const response = await axios.get('/', {
+  useEffect(() => {
+    if (!searchValue.length) return;
+    try {
+      axios
+        .get('/', {
           params: {
-            q: nextSearchValue,
+            q: searchValue,
             key: '31452049-9028b927189bb89bc78a16cd7',
-            page: this.state.page,
+            page: page,
             per_page: 12,
           },
+        })
+        .then(response => {
+          if (!response.data.totalHits) {
+            Notiflix.Notify.warning(`Нічого не знайдено, спробуйте ще`);
+            return;
+          }
+          console.log(response);
+          setTotalHits(response.data.totalHits);
+          const data = normalizeResponse(response);
+          console.log(data);
+          setRequestData(state => [...state, ...data]);
         });
-
-        if (!response.data.totalHits) {
-          Notiflix.Notify.warning(`Нічого не знайдено, спробуйте ще`);
-          return;
-        }
-
-        this.setState({ totalHits: response.data.totalHits });
-        const data = this.normalizeResponse(response);
-        this.setState(prevState => ({
-          requestData: [...prevState.requestData, ...data],
-        }));
-      } catch (error) {
-      } finally {
-        this.setState({
-          loading: false,
-        });
-      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
     }
-  }
+  }, [searchValue, page]);
 
-  handleSubmitSearchBar = searchValue => {
+  function handleSubmitSearchBar(searchValue) {
     if (searchValue === '') {
       Notiflix.Notify.warning(`Ви не ввели жодного запиту`);
+      return;
     }
 
-    this.setState({
-      searchValue: searchValue,
-      requestData: [],
-      page: 1,
-      loading: true,
-      showModal: false,
-      totalHits: 0,
-    });
-  };
-
-  render() {
-    const { requestData, showModal, totalHits, page, loading } = this.state;
-
-    return (
-      <AppBlock>
-        <Searchbar onSubmit={this.handleSubmitSearchBar} />
-        {requestData.length > 0 && (
-          <ImageGallery
-            toggle={this.toggleModal}
-            requestData={requestData}
-            largeImageURL={this.onClickImg}
-          />
-        )}
-        {loading && <Loader />}
-        {totalHits > 12 * page && totalHits && !loading && (
-          <Button onClick={this.loadMore}>Load More</Button>
-        )}
-
-        {showModal && (
-          <Modal onClose={this.toggleModal}>
-            <SelectedModalWindowImage
-              src={this.state.largeModalImgURL}
-              alt=""
-            />
-            <Button onClick={this.toggleModal}>Close</Button>
-          </Modal>
-        )}
-      </AppBlock>
-    );
+    setSearchValue(searchValue);
+    setRequestData([]);
+    setPage(1);
+    setLoading(false);
   }
-}
 
-// App.propTypes = {
-//   onSubmit: PropTypes.string.isRequired,
-//   searchValue: PropTypes.string.isRequired,
-// };
+  return (
+    <AppBlock>
+      <Searchbar onSubmit={handleSubmitSearchBar} />
+      {requestData.length > 0 && (
+        <ImageGallery
+          toggle={toggleModal}
+          requestData={requestData}
+          largeImageURL={onClickImg}
+        />
+      )}
+      {loading && <Loader />}
+      {totalHits > 12 * page && totalHits && !loading && (
+        <Button onClick={loadMore}>Load More</Button>
+      )}
+
+      {showModal && (
+        <Modal onClose={toggleModal}>
+          <SelectedModalWindowImage src={largeUrl} alt="" />
+          <Button onClick={toggleModal}>Close</Button>
+        </Modal>
+      )}
+    </AppBlock>
+  );
+};
