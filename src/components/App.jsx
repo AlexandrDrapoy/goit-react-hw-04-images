@@ -13,6 +13,18 @@ import { useEffect } from 'react';
 
 axios.defaults.baseURL = 'https://pixabay.com/api';
 
+const normalizeResponse = response => {
+  const nornalizeData = response.data.hits.map(
+    ({ webformatURL, id, largeImageURL }) => ({
+      id: id,
+      webURL: webformatURL,
+      largeURL: largeImageURL,
+    })
+  );
+
+  return nornalizeData;
+};
+
 export const App = () => {
   const [showModal, setShowModal] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -36,45 +48,30 @@ export const App = () => {
     setPage(state => state + 1);
   };
 
-  const normalizeResponse = response => {
-    const nornalizeData = response.data.hits.map(
-      ({ webformatURL, id, largeImageURL }) => ({
-        id: id,
-        webURL: webformatURL,
-        largeURL: largeImageURL,
-      })
-    );
-
-    return nornalizeData;
-  };
-
   useEffect(() => {
     if (!searchValue.length) return;
-    try {
-      axios
-        .get('/', {
-          params: {
-            q: searchValue,
-            key: '31452049-9028b927189bb89bc78a16cd7',
-            page: page,
-            per_page: 12,
-          },
-        })
-        .then(response => {
-          if (!response.data.totalHits) {
-            Notiflix.Notify.warning(`Нічого не знайдено, спробуйте ще`);
-            return;
-          }
-          console.log(response);
-          setTotalHits(response.data.totalHits);
-          const data = normalizeResponse(response);
-          console.log(data);
-          setRequestData(state => [...state, ...data]);
-        });
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
+
+    axios
+      .get('/', {
+        params: {
+          q: searchValue,
+          key: '31452049-9028b927189bb89bc78a16cd7',
+          page: page,
+          per_page: 12,
+        },
+      })
+      .then(response => {
+        if (!response.data.totalHits) {
+          Notiflix.Notify.warning(`Нічого не знайдено, спробуйте ще`);
+          return;
+        }
+        console.log(response);
+        setTotalHits(response.data.totalHits);
+        const data = normalizeResponse(response);
+        console.log(data);
+        setRequestData(state => [...state, ...data]);
+      })
+      .finally(setLoading(false));
   }, [searchValue, page]);
 
   function handleSubmitSearchBar(searchValue) {
@@ -86,7 +83,7 @@ export const App = () => {
     setSearchValue(searchValue);
     setRequestData([]);
     setPage(1);
-    setLoading(false);
+    setLoading(true);
   }
 
   return (
